@@ -4,6 +4,12 @@
 
 项目自己负责命令行、进程生命周期和部署参数；Agent 内核、Web UI、API 与插件实现均来自官方发布包。
 
+## 界面主题
+
+本项目在官方 Web UI 之上提供固定的「Champagne Light」亮色主题。界面使用淡香槟色连续纸面、低对比度分隔和克制的蓝色行动强调，不提供暗色或跟随系统的外观切换。
+
+主题通过 DeepSeek Harness 的公开扩展点接入：Host 插件负责首屏亮色引导，浏览器插件通过 ThemeRuntime 覆盖语义 token，并使用 Slot 优先级隐藏官方 Appearance 设置行。项目不会复制、修改或引用 DeepSeek Harness 的内部构建文件；Workspace、Session、Chat、Trajectory、工具详情、设置与目录选择等真实行为仍由官方发布包提供。
+
 ## 环境要求
 
 - Node.js `^22.19.0` 或 `>=24.0.0`
@@ -36,13 +42,13 @@ pnpm start
 修改端口：
 
 ```sh
-pnpm start -- --port 4080
+pnpm start --port 4080
 ```
 
 为具名域名添加浏览器 API 信任项；该参数可以重复：
 
 ```sh
-pnpm start -- --trusted-host aha.internal --trusted-host aha.internal:3080
+pnpm start --trusted-host aha.internal --trusted-host aha.internal:3080
 ```
 
 查看完整参数：

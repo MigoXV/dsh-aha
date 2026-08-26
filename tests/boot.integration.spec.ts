@@ -42,5 +42,8 @@ describe('official DSH Web composition', () => {
     const html = await response.text()
     expect(html).toContain('<title>DeepSeek Harness</title>')
     expect(html).toContain('__DSH_BOOT__')
+    expect(html).toContain('__DSH_AHA_THEME__')
+    expect(html).toContain('@dsh-aha/ui-champagne/client.js')
+    expect(html).toContain("removeAttribute('data-ds-dark-theme')")
   })
 })

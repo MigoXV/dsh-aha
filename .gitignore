@@ -1,3 +1,6 @@
+data-bin/
+model-bin/
+tmp-workspace/
 node_modules/
 lib/
 coverage/

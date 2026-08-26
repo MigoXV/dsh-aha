@@ -1,2 +1,3 @@
-# dsh-aha 的组合根保持为空；官方 base/web bundle 与本项目覆盖层由启动器加载。
-[]
+# 本项目只增加一个公开 Cordis/client 扩展；完整业务 UI 仍由官方 web bundle 提供。
+- id: champagne-ui
+  name: '@dsh-aha/ui-champagne'

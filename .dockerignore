@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+
+node_modules
+lib
+coverage
+*.tsbuildinfo
+
+data-bin
+model-bin
+tmp-workspace
+
+.DS_Store
