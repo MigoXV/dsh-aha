@@ -1,0 +1,13 @@
+packages: []
+
+# DSH 的插件会在运行时从组合文件目录按包名加载其他官方插件；hoisted 布局让完整锁定闭包可见。
+nodeLinker: hoisted
+
+# pnpm 默认拒绝依赖的生命周期脚本。这里沿用官方 DSH 对同一依赖图的审核结果。
+allowBuilds:
+  esbuild: true
+  node-pty: true
+  koffi: true
+  '@deepseek-ai/dsh-subprocess-local': true
+  '@google/genai': false
+  protobufjs: false
