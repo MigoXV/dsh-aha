@@ -9,6 +9,7 @@ WORKDIR /src
 # 先复制依赖清单，让源码变化不会使依赖层失效。
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/ui-champagne/package.json packages/ui-champagne/package.json
+COPY patches ./patches
 
 RUN corepack enable \
     && pnpm install --frozen-lockfile
