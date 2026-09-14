@@ -1,6 +1,6 @@
 # dsh-aha
 
-`dsh-aha` 是一个独立的 DeepSeek Harness Web 启动壳。它不维护 DeepSeek Harness 源码 fork，而是通过 pnpm 精确依赖官方发布的 `@deepseek-ai/dsh@0.1.1-rc.2` 及其公开组合模块。
+`dsh-aha` 是一个独立的 DeepSeek Harness Web 启动壳。它不维护 DeepSeek Harness 源码 fork，而是通过 pnpm 精确依赖官方发布的 `@deepseek-ai/dsh@0.1.5-rc.2`（本次选定的 next 版本）及其公开组合模块。
 
 项目自己负责命令行、进程生命周期和部署参数；Agent 内核、Web UI、API 与插件实现均来自官方发布包。
 
@@ -37,7 +37,9 @@ cp .env.example .env
 pnpm start
 ```
 
-服务固定绑定 `0.0.0.0:3080`，启动后不会自动打开浏览器。请访问 `http://127.0.0.1:3080`。
+服务固定绑定 `0.0.0.0:3080`，启动后不会自动打开浏览器。首次访问请完整打开终端打印的带 `?token=...` 的链接；局域网设备使用其中的 LAN 链接，例如 `http://192.168.1.10:3080/?token=...`。
+
+官方认证服务会将启动令牌换成 HttpOnly cookie，并跳转到不带令牌的首页。随后可直接访问同一地址；本机地址、不同局域网 IP 和不同端口的 cookie 不通用。请勿将带令牌的链接分享给不可信的人。
 
 修改端口：
 
@@ -50,6 +52,16 @@ pnpm start --port 4080
 ```sh
 pnpm start --trusted-host aha.internal --trusted-host aha.internal:3080
 ```
+
+域名首次访问时，将启动链接中的主机地址替换为该域名，保留实际端口和令牌。本机网卡的局域网 IPv4 地址会自动加入信任，无需额外指定。
+
+## 局域网 HTTP 与连接排查
+
+- 支持通过可信局域网 IPv4 地址直接使用 HTTP，无需将浏览器配置为信任不安全来源。
+- 首页或 API 返回 401 时，重新打开当前服务启动时打印的带令牌链接。清除 cookie、认证过期或更换访问地址后都需要重新认证。
+- 返回 403 时，检查访问域名是否通过 `--trusted-host` 配置，并确认 Origin 与实际访问地址一致；该参数不会绕过认证。
+- 新版事件连接使用 `/api/remote.mux`。升级、构建并重启后请刷新所有旧标签页；如果仍请求 `/api/events.mux` 或 `/api/events.host`，强制刷新页面并确认端口上的进程确实已经更新。
+- 仍持续断线时，检查浏览器 Network 中 WebSocket 的握手响应及终端错误；HTTP 首页可打开不代表事件连接已经就绪。
 
 查看完整参数：
 
@@ -70,11 +82,17 @@ pnpm start
 
 ## 安全说明
 
-`dsh-aha` 默认绑定全部网络接口，并且不提供用户身份认证。DeepSeek Harness 能够执行命令和读写工作区，因此只能在可信局域网中运行；不要把端口直接暴露到公网。
+`dsh-aha` 默认绑定全部网络接口，沿用官方启动令牌与浏览器 cookie 认证，不提供多用户账号体系。DeepSeek Harness 能够执行命令和读写工作区，因此只能在可信局域网中运行；不要把端口直接暴露到公网。HTTP 不加密令牌与 cookie 的传输。
 
 `--trusted-host` 用于防御 DNS rebinding，不是身份认证机制。
 
 ## 开发
+
+测试包含真实 Chromium 的局域网 HTTP 回归，需要至少一个非 loopback IPv4 网卡。默认使用 `/usr/bin/chromium`；可通过 `CHROMIUM_PATH` 指定其他位置，或先安装 Playwright Chromium：
+
+```sh
+pnpm exec playwright install chromium
+```
 
 ```sh
 pnpm dev
@@ -85,4 +103,4 @@ pnpm build
 pnpm check
 ```
 
-升级 DeepSeek Harness 时，应同时更新所有 `@deepseek-ai/dsh*` 依赖，重新生成 `pnpm-lock.yaml`，再运行 `pnpm check` 和实际 HTTP 启动验证。
+升级 DeepSeek Harness 时，应同时更新所有 `@deepseek-ai/dsh*` 依赖与 `pnpm-workspace.yaml` 的 peer 版本覆盖，重新生成 `pnpm-lock.yaml`，再运行 `pnpm check` 和实际 HTTP 启动验证。版本回归测试会拒绝锁文件中的新旧 DSH 混用。
