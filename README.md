@@ -8,7 +8,15 @@
 
 本项目在官方 Web UI 之上提供固定的「Champagne Light」亮色主题。界面使用淡香槟色连续纸面、低对比度分隔和克制的蓝色行动强调，不提供暗色或跟随系统的外观切换。
 
-主题通过 DeepSeek Harness 的公开扩展点接入：Host 插件负责首屏亮色引导，浏览器插件通过 ThemeRuntime 覆盖语义 token，并使用 Slot 优先级隐藏官方 Appearance 设置行。项目不会复制、修改或引用 DeepSeek Harness 的内部构建文件；Workspace、Session、Chat、Trajectory、工具详情、设置与目录选择等真实行为仍由官方发布包提供。
+主题通过 DeepSeek Harness 的公开扩展点接入：Host 插件负责首屏亮色引导，浏览器插件通过 ThemeRuntime 覆盖语义 token，并使用 Slot 优先级隐藏官方 Appearance 设置行。主题不修改官方构建文件；Workspace、Session、Chat、Trajectory、工具详情、设置与目录选择等真实行为仍由官方发布包提供。
+
+## 局域网设置兼容补丁
+
+官方 `0.1.5-rc.2` 设置插件将非 localhost 页面切换到内存模式，导致模型设置提示 `settings are unavailable in this browser`。经项目维护者明确授权，本项目对此保留一个最小例外：通过 `pnpm patch` 将 `@deepseek-ai/dsh-client-ui-settings` 的设置持久化模式固定为 `host`。补丁位于 `patches/`，由 `pnpm-workspace.yaml` 的 `patchedDependencies` 和锁文件管理，安装依赖时自动应用。
+
+此补丁不伪装浏览器的 `isLoopback`，也不修改服务端令牌认证或 Host/Origin 校验；已认证的局域网浏览器可以读取、保存同一主机的设置。补丁只改动该版本发布包的一处判断，不扩展为官方源码 fork。升级时应先验证官方是否已支持非 loopback 设置持久化；确认模型目录加载、配置保存和重新打开浏览器的回归测试通过后，再移除补丁及对应配置。
+
+更新项目后执行 `pnpm install --frozen-lockfile` 和 `pnpm build`，重启服务并强制刷新旧标签页，使浏览器加载修补后的设置插件。
 
 ## 环境要求
 

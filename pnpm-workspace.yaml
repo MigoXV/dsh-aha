@@ -35,3 +35,6 @@ allowBuilds:
   '@deepseek-ai/dsh-subprocess-local': true
   '@google/genai': false
   protobufjs: false
+
+patchedDependencies:
+  '@deepseek-ai/dsh-client-ui-settings@0.1.5-rc.2': patches/@deepseek-ai__dsh-client-ui-settings@0.1.5-rc.2.patch

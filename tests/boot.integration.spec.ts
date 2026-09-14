@@ -7,7 +7,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import { loadLayeredEnv } from '@deepseek-ai/dsh-app-boot'
 import type {} from '@deepseek-ai/dsh-client-connection'
 import { resolveLanTrust } from '@deepseek-ai/dsh-web-app'
-import { chromium } from '@playwright/test'
+import { chromium, type Page } from '@playwright/test'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { bootAha } from '../src/composition.js'
 
@@ -166,6 +166,76 @@ describe('official DSH Web composition', () => {
       expect(sockets.length).toBeGreaterThanOrEqual(3)
       expect(sockets.every(path => path === '/api/remote.mux')).toBe(true)
       expect(errors).toEqual([])
+    } finally {
+      await browser.close()
+    }
+  }, 60_000)
+
+  it('persists provider settings across LAN page reloads and new browsers', async () => {
+    const address = resolveLanTrust('0.0.0.0', []).lanAddresses[0]
+    if (address === undefined) throw new Error('LAN settings test requires a non-loopback IPv4 interface')
+    const url = `http://${address}:${String(context.get('webServer')?.port)}`
+    const executablePath = process.env['CHROMIUM_PATH']
+      ?? (existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined)
+    const launch = () => chromium.launch({
+      ...(executablePath === undefined ? {} : { executablePath }),
+      args: ['--no-sandbox', '--no-proxy-server'],
+    })
+    const failures: string[] = []
+    const observe = (page: Page): void => {
+      page.on('pageerror', error => failures.push(error.message))
+      page.on('response', response => {
+        if (response.status() >= 400) {
+          failures.push(`${String(response.status())} ${new URL(response.url()).pathname}`)
+        }
+      })
+    }
+    const openModels = async (page: Page): Promise<void> => {
+      await page.getByRole('button', { name: 'Settings', exact: true }).waitFor()
+      const notice = page.getByRole('button', { name: 'Continue', exact: true })
+      if (await notice.isVisible()) await notice.click()
+      if (!await page.getByRole('dialog', { name: 'Settings', exact: true }).isVisible()) {
+        await page.getByRole('button', { name: 'Settings', exact: true }).click()
+      }
+      await page.getByRole('button', { name: 'Models', exact: true }).click()
+      await page.getByRole('heading', { name: 'Models', exact: true }).waitFor()
+      expect(await page.locator('body').innerText()).not.toContain('settings are unavailable')
+    }
+    const verifyProvider = async (page: Page): Promise<void> => {
+      await openModels(page)
+      await page.getByRole('button', { name: /Edit .*openai/i }).click()
+      await page.getByPlaceholder('Configured — enter a new value to replace').waitFor()
+      await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+    }
+    let browser = await launch()
+    try {
+      const browserContext = await browser.newContext()
+      const page = await browserContext.newPage()
+      observe(page)
+      await page.goto(context.get('connection')!.authenticatedUrl(url))
+      expect(await page.evaluate('window.isSecureContext')).toBe(false)
+      await openModels(page)
+      await page.getByRole('button', { name: 'Add provider', exact: true }).click()
+      await page.getByRole('combobox', { name: 'Provider', exact: true }).selectOption('openai')
+      await page.getByRole('textbox', { name: 'API key', exact: true }).fill('dsh-aha-test-only')
+      await page.getByRole('button', { name: 'Apply', exact: true }).click()
+      await page.getByRole('button', { name: /Edit .*openai/i }).waitFor()
+
+      await page.reload()
+      await verifyProvider(page)
+      await browserContext.setOffline(true)
+      await browserContext.setOffline(false)
+      await verifyProvider(page)
+
+      await browser.close()
+      browser = await launch()
+      const reopened = await browser.newPage()
+      observe(reopened)
+      await reopened.goto(context.get('connection')!.authenticatedUrl(url))
+      await verifyProvider(reopened)
+      await reopened.getByRole('button', { name: 'General', exact: true }).click()
+      await reopened.getByRole('button', { name: 'Increase font size', exact: true }).waitFor()
+      expect(failures).toEqual([])
     } finally {
       await browser.close()
     }
