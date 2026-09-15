@@ -4,6 +4,29 @@ packages:
 # DSH 的插件会在运行时从组合文件目录按包名加载其他官方插件；hoisted 布局让完整锁定闭包可见。
 nodeLinker: hoisted
 
+# 这些服务主要通过 peerDependencies 引入；显式固定，防止 pnpm 复用旧版 peer 快照。
+# 升级 DSH 时与 package.json 一起更新，tests/dependencies.spec.ts 检查整个锁文件。
+overrides:
+  '@deepseek-ai/dsh-anonymous-user-id': 0.1.5-rc.2
+  '@deepseek-ai/dsh-attachment': 0.1.5-rc.2
+  '@deepseek-ai/dsh-authorization': 0.1.5-rc.2
+  '@deepseek-ai/dsh-bash-local': 0.1.5-rc.2
+  '@deepseek-ai/dsh-code-runtime': 0.1.5-rc.2
+  '@deepseek-ai/dsh-compaction': 0.1.5-rc.2
+  '@deepseek-ai/dsh-fs': 0.1.5-rc.2
+  '@deepseek-ai/dsh-jobs': 0.1.5-rc.2
+  '@deepseek-ai/dsh-output-retention': 0.1.5-rc.2
+  '@deepseek-ai/dsh-sandbox': 0.1.5-rc.2
+  '@deepseek-ai/dsh-session-persistence': 0.1.5-rc.2
+  '@deepseek-ai/dsh-session-query': 0.1.5-rc.2
+  '@deepseek-ai/dsh-session-telemetry': 0.1.5-rc.2
+  '@deepseek-ai/dsh-session-title-llm': 0.1.5-rc.2
+  '@deepseek-ai/dsh-settings': 0.1.5-rc.2
+  '@deepseek-ai/dsh-shell': 0.1.5-rc.2
+  '@deepseek-ai/dsh-spill': 0.1.5-rc.2
+  '@deepseek-ai/dsh-subagent-in-process-driver': 0.1.5-rc.2
+  '@deepseek-ai/dsh-workflow': 0.1.5-rc.2
+
 # pnpm 默认拒绝依赖的生命周期脚本。这里沿用官方 DSH 对同一依赖图的审核结果。
 allowBuilds:
   esbuild: true
@@ -12,3 +35,6 @@ allowBuilds:
   '@deepseek-ai/dsh-subprocess-local': true
   '@google/genai': false
   protobufjs: false
+
+patchedDependencies:
+  '@deepseek-ai/dsh-client-ui-settings@0.1.5-rc.2': patches/@deepseek-ai__dsh-client-ui-settings@0.1.5-rc.2.patch
