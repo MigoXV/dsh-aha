@@ -1,4 +1,3 @@
-import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import type { Context } from '@deepseek-ai/cordis'
 import type { PatchOptions } from '@deepseek-ai/cordis-plugin-include'
@@ -15,7 +14,6 @@ const ROOT_CONFIG = fileURLToPath(new URL('../config/cordis.yml', import.meta.ur
 const BASE_PATCH = fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-base/cordis.patch.yml'))
 const WEB_PATCH = fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-web-app/cordis.patch.yml'))
 const DSH_PACKAGE = fileURLToPath(import.meta.resolve('@deepseek-ai/dsh/package.json'))
-const SHIPPED_PRESET_ROOT = join(dirname(DSH_PACKAGE), 'config', 'agent-presets')
 
 export interface BootOptions extends CliOptions {
   environment: LaunchEnvironmentSnapshot
@@ -42,14 +40,6 @@ export function deploymentPatches(options: CliOptions): PatchOptions[] {
         printUrl: false,
         surfaceContext: true,
         trustedHosts: [...options.trustedHosts],
-      },
-    },
-    {
-      id: 'agent-presets',
-      config: {
-        default: 'standard',
-        roots: [{ path: SHIPPED_PRESET_ROOT, trust: 'system' }],
-        includeUserRoot: true,
       },
     },
     ...(process.env['DSH_TELEMETRY_DISABLED'] ?? '') === ''
